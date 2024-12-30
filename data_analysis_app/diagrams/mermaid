@@ -1,0 +1,144 @@
+classDiagram
+
+%% Factory Design Pattern
+class FileReaderFactory {
+  +static get_reader(file_name: str) DataReader
+}
+class DataReader {
+  <<abstract>>
+  +read(source, **kwargs) pd.DataFrame
+}
+class CSVReader {
+  +read(source, chunksize=None, delimiter=',') pd.DataFrame
+}
+class JSONReader {
+  +read(source, orient='records') pd.DataFrame
+}
+FileReaderFactory --> DataReader : uses
+DataReader <|-- CSVReader
+DataReader <|-- JSONReader
+
+
+%% Strategy Design Pattern
+class PlotStrategy {
+  <<abstract>>
+  +create_plot(data, title: str, **kwargs) Figure
+}
+class LinePlotStrategy {
+  +create_plot(data, title: str, x_column, y_column, line_color='blue', line_width=2) Figure
+}
+class ScatterPlotStrategy {
+  +create_plot(data, title: str, x_column, y_column, marker_symbol='circle', marker_color='red') Figure
+}
+class HistogramStrategy {
+  +create_plot(data, title: str, x_column, bins=30, bar_color='green') Figure
+}
+class HeatmapStrategy {
+  +create_plot(data, title: str, z_data, colorscale='Viridis') Figure
+}
+class BoxPlotStrategy {
+  +create_plot(data, title: str, y_column, box_color='orange') Figure
+}
+class Plot {
+  -title: str
+  -figure: Figure
+  -plot_type: str
+  -color: str
+  -strategy: PlotStrategy
+  +set_strategy(strategy: PlotStrategy)
+  +create_plot(data, title: str, **kwargs) Figure
+  +update_color(color: str)
+}
+
+PlotStrategy <|-- LinePlotStrategy
+PlotStrategy <|-- ScatterPlotStrategy
+PlotStrategy <|-- HistogramStrategy
+PlotStrategy <|-- HeatmapStrategy
+PlotStrategy <|-- BoxPlotStrategy
+Plot --> PlotStrategy : sets
+
+
+%% Observer Design Pattern
+class Dashboard {
+  -plots: List<Plot>
+  -observers: List<Plot>
+  +add_plot(plot: Plot)
+  +change_color_theme(color: str)
+  +get_iterator(strategy: str) : Iterator<Plot>
+}
+
+Dashboard o-- Plot : aggregates
+Dashboard --> Plot : notifies
+
+
+%% Iterator Design Pattern
+class PlotIterator {
+  <<interface>>
+  +__iter__() PlotIterator
+  +__next__() Plot
+}
+class PlotTypeIterator {
+  +__iter__() PlotIterator
+  +__next__() Plot
+}
+class AlphabeticalIterator {
+  +__iter__() PlotIterator
+  +__next__() Plot
+}
+
+PlotIterator <|-- PlotTypeIterator
+PlotIterator <|-- AlphabeticalIterator
+Dashboard --> PlotIterator : get_iterator
+
+
+%% Template Design Pattern
+class DimensionalityReduction {
+  <<abstract>>
+  -data: pd.DataFrame
+  -columns: list
+  -n_components: int
+  -scaled_data: pd.DataFrame
+  +preprocess_data()
+  +apply_reduction() : abstract
+  +postprocess_results(reduced_data: np.ndarray) : pd.DataFrame
+  +run() : pd.DataFrame
+}
+class PCAAnalysis {
+  +apply_reduction() : pd.DataFrame
+}
+class UMAPAnalysis {
+  -n_neighbors: int
+  -min_dist: float
+  +apply_reduction() : pd.DataFrame
+}
+
+DimensionalityReduction <|-- PCAAnalysis
+DimensionalityReduction <|-- UMAPAnalysis
+
+
+%% Data Preprocessing
+class DataPreprocessor {
+  -original_data: pd.DataFrame
+  -data: pd.DataFrame
+  +reset_data()
+  +handle_nulls(method: str, fill_value: any) : pd.DataFrame
+  +rename_columns(column_mapping: dict) : pd.DataFrame
+  +drop_columns(columns_to_drop: list) : pd.DataFrame
+  +get_data() : pd.DataFrame
+}
+
+
+%% Main Interface
+class MainInterface {
+  +run_app()
+}
+MainInterface --> FileReaderFactory : uses
+MainInterface --> DataPreprocessor : uses
+MainInterface --> Dashboard : uses
+MainInterface --> Plot : uses
+MainInterface --> DimensionalityReduction : uses
+
+
+%% Connections between components
+Plot --> Dashboard : adds
+Plot --> Plot : notifies
