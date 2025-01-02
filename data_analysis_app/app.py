@@ -19,7 +19,6 @@ st.markdown(
     "This app allows you to upload datasets, preprocess them, and visualize the results interactively."
 )
 
-# Initialize session states
 if 'current_page' not in st.session_state:
     st.session_state.current_page = 'preprocessing'
 if 'data_file' not in st.session_state:
@@ -115,13 +114,14 @@ if st.session_state.data_file:
 
         # Visualization page content
         st.sidebar.header("Step 3: Visualization")
-        plot_type = st.sidebar.selectbox("Select Plot Type", ["scatter", "line", "histogram", "boxplot", "heatmap"])
+        plot_type = st.sidebar.selectbox("Select Plot Type", ["scatter", "line", "histogram", "boxplot", "heatmap", "dimensionality_reduction"])
+        plot_subtype = None
         additional_params = {}
 
         if plot_type:
-            if plot_type != 'heatmap':
+            if plot_type != 'heatmap' and plot_type != 'dimensionality_reduction':
                 x_column = st.sidebar.selectbox("Select X-axis column", st.session_state.preprocessor.get_data().columns, key="x_column")
-
+                additional_params["x_column"] = x_column
                 if plot_type in ["line", "scatter"]:
                     y_column = st.sidebar.selectbox("Select Y-axis column", st.session_state.preprocessor.get_data().columns, key="y_column")
                     additional_params["y_column"] = y_column
@@ -145,13 +145,26 @@ if st.session_state.data_file:
                 elif plot_type == "boxplot":
                     y_column = st.sidebar.selectbox("Select Y-axis column", st.session_state.preprocessor.get_data().columns, key="y_column")
                     additional_params["box_color"] = st.sidebar.color_picker("Box Color", "#FFA500")
-            else:
+            elif plot_type=='heatmap':
                 x_column = st.sidebar.selectbox("Select X-axis column", st.session_state.preprocessor.get_data().select_dtypes(include=["object"]).columns, key="x_column")
                 y_column = st.sidebar.selectbox("Select Y-axis column", st.session_state.preprocessor.get_data().select_dtypes(include=["object"]).columns, key="y_column")
                 additional_params["y_column"] = y_column
                 z_column = st.sidebar.selectbox("Select Z-axis column", st.session_state.preprocessor.get_data().columns, key="z_column")
                 additional_params["z_column"] = z_column
                 additional_params["colorscale"] = st.sidebar.selectbox("Colorscale", ["Viridis", "Cividis", "Plasma"])
+            
+            elif plot_type == "dimensionality_reduction":
+                additional_params['data']=st.session_state.preprocessor.get_data()
+                reduction_method = st.sidebar.selectbox("Select Dimensionality Reduction Method", ["PCA", "UMAP"])
+                plot_subtype=reduction_method
+                categorical_column = st.sidebar.selectbox("Select Categorical Column for Coloring", 
+                                        [None] + list(st.session_state.preprocessor.get_data().select_dtypes(include=["object"]).columns), 
+                                        key="categorical_column")
+                additional_params["categorical_column"] = categorical_column
+
+                if reduction_method == "UMAP":
+                    n_neighbors = st.sidebar.slider("Select n_neighbors", 5, 50, 5)
+                    min_dist = st.sidebar.slider("Select min_dist", 0.0, 1.0, 0.1)
 
                       # Default title and custom title input
             default_title = f"{plot_type.capitalize()} Plot"
@@ -163,16 +176,20 @@ if st.session_state.data_file:
                 default_title += f" X {x_column}"
             elif plot_type == "boxplot":
                 default_title += f" Y {y_column}"
+            elif plot_type == "dimensionality_reduction":
+                default_title= f"{reduction_method}"
+            if additional_params.get("categorical_column", None):
+                default_title += f" by {categorical_column}"
+            
 
 
             custom_title = st.sidebar.text_input("Plot Title", default_title)
             additional_params["title"] = custom_title
             
-            # Create and display the plot
             try:
                 fig = st.session_state.facade.create_plot(
                     plot_type=plot_type,
-                    x_column=x_column,
+                    plot_subtype=plot_subtype,
                     **additional_params
                 )
                 st.plotly_chart(fig)

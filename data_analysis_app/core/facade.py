@@ -1,6 +1,8 @@
 from core.readers import FileReaderFactory
 from core.preprocessing import DataPreprocessor
 from core.plots import PlotContext
+from core.dim_reduction import DimReductionFactory
+
 # from readers import FileReaderFactory
 # from preprocessing import DataPreprocessor
 # from plots import PlotContext
@@ -49,7 +51,7 @@ class DataAnalysisFacade:
             
         return self.preprocessor.get_data() 
 
-    def create_plot(self, plot_type, title, **kwargs):
+    def create_plot(self, plot_type, plot_subtype, **kwargs):
         """
         Create a plot using the provided plot type and parameters.
 
@@ -60,9 +62,15 @@ class DataAnalysisFacade:
         """
         if self.plot_context is None:
             self.plot_context = PlotContext(None)
+        
+        if plot_type != 'dimensionality_reduction':
+            self.plot_context.set_strategy(plot_type)
+            self.plot_context.update_plot(self.preprocessor.get_data(), **kwargs)
+        else:
+            reduction_technique = DimReductionFactory.get_reducer(plot_subtype, **kwargs)
 
-        self.plot_context.set_strategy(plot_type)
-        self.plot_context.update_plot(self.preprocessor.get_data(), title, **kwargs)
+            fig=reduction_technique.create_plot()
+            self.plot_context.set_plot(fig)
         return self.plot_context.fig
     
 # # Example Usage

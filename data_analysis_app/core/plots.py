@@ -119,7 +119,7 @@ class PlotContext:
         print("Initializing PlotContext...")
         self.strategy = strategy
         
-    def _get_strategy(self, strategy_name: str):
+    def _get_strategy(self, strategy_name: str, plot_subtype: str = None):
         if strategy_name == "line":
             return LinePlotStrategy()
         elif strategy_name == "scatter":
@@ -133,12 +133,14 @@ class PlotContext:
         else:
             raise ValueError(f"Unknown strategy: {strategy_name}")
 
-    def set_strategy(self, strategy_name: str):
-        self.strategy = self._get_strategy(strategy_name)
+    def set_strategy(self, strategy_name: str,plot_subtype: str = None):
+        self.strategy = self._get_strategy(strategy_name, plot_subtype)
 
-    def update_plot(self, data, title: str, **kwargs):
+    def update_plot(self, data, **kwargs):
         self.fig = Figure()
-        self.fig= self.strategy.create_plot(self.fig, data, title, **kwargs)
+        self.fig= self.strategy.create_plot(self.fig, data, **kwargs)
+    def set_plot(self, fig):
+        self.fig = fig
 
 
 #example code
