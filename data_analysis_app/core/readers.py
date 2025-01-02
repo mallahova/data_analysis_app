@@ -1,8 +1,10 @@
+"""
+This module provides a factory for creating data readers based on file extension."""
+
 import pandas as pd
 from abc import ABC, abstractmethod
+import io
 import os
-
-
 
 class DataReader(ABC):
     """Abstract base class for all data readers."""
@@ -28,20 +30,30 @@ class JSONReader(DataReader):
 class FileReaderFactory:
     """Factory for creating appropriate data readers based on file extension."""
     @staticmethod
-    def get_reader(file_name):
+    def get_reader(file):
         # Extract the file extension
-        _, file_extension = os.path.splitext(file_name)
-        file_extension = file_extension.lower()
-
-        if file_extension == '.csv':
-            return CSVReader()
-        elif file_extension == '.json':
-            return JSONReader()
+        if isinstance(file, io.BytesIO):  # Check if file is a BytesIO object (Streamlit file uploader type)
+            file_extension = file.name.split('.')[-1].lower()
+            
+            if file_extension == 'csv':
+                return CSVReader()
+            elif file_extension == 'json':
+                return JSONReader()
+            else:
+                raise ValueError(f"Unsupported file type: {file_extension}")
         else:
-            raise ValueError(f"Unsupported file type: {file_extension}")
+            _, file_extension = os.path.splitext(file)
+            file_extension = file_extension.lower()
+
+            if file_extension == '.csv':
+                return CSVReader()
+            elif file_extension == '.json':
+                return JSONReader()
+            else:
+                raise ValueError(f"Unsupported file type: {file_extension}")
 
 
-factory = FileReaderFactory()
-reader = factory.get_reader('data_analysis_app/samples/Starbucks.csv')
-data = reader.read('data_analysis_app/samples/Starbucks.csv', delimiter=',')
-print(data.head())
+# factory = FileReaderFactory()
+# reader = factory.get_reader('data_analysis_app/samples/Starbucks.csv')
+# data = reader.read('data_analysis_app/samples/Starbucks.csv', delimiter=',')
+# print(data.head())

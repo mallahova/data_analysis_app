@@ -1,3 +1,6 @@
+"""
+This module contains the DataPreprocessor class, which stores the data read by the reader amd handles various preprocessing operations
+on a Pandas DataFrame."""
 import pandas as pd
 
 class DataPreprocessor:
@@ -6,6 +9,7 @@ class DataPreprocessor:
     """
 
     def __init__(self, data):
+
         """
         Initialize the preprocessor with a dataset.
 
@@ -13,9 +17,8 @@ class DataPreprocessor:
         """
         if not isinstance(data, pd.DataFrame):
             raise ValueError("Input data must be a Pandas DataFrame.")
-        self.original_data = data.copy()  # Preserve a copy of the original data
-        self.data = data.copy()  # Work on a copy of the original data
-
+        self.original_data = data.copy()
+        self.data = data
     def reset_data(self):
         """
         Reset the dataset to its original state.
@@ -75,35 +78,3 @@ class DataPreprocessor:
         :return: pd.DataFrame - The preprocessed DataFrame.
         """
         return self.data
-
-# Example usage
-if __name__ == "__main__":
-    # Example dataset
-    sample_data = {
-        "Name": ["Alice", "Bob", "Charlie", None],
-        "Age": [25, 30, None, 22],
-        "City": ["New York", None, "Los Angeles", "Chicago"],
-    }
-    df = pd.DataFrame(sample_data)
-
-    # Initialize preprocessor
-    preprocessor = DataPreprocessor(df)
-
-    # Handle null values
-    print("Original Data:")
-    print(df)
-    preprocessor.handle_nulls(method="fill", fill_value="Unknown")
-
-    # Rename columns
-    preprocessor.rename_columns({"Name": "Full Name", "City": "Location"})
-
-    # Drop columns
-    preprocessor.drop_columns(["Age"])
-
-    # Reset data to original state
-   #  preprocessor.reset_data()
-
-    # Get the preprocessed data
-    processed_data = preprocessor.get_data()
-    print("\nPreprocessed Data:")
-    print(processed_data)
