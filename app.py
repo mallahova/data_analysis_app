@@ -1,8 +1,6 @@
 import streamlit as st
 from core.facade import DataAnalysisFacade
 import plotly.graph_objects as go
-import uuid
-
 
 st.set_page_config(
     page_title="Visualize, visualize, visualize!",
@@ -21,8 +19,6 @@ st.markdown(
     "This app allows you to upload datasets, preprocess them, and visualize the results interactively."
 )
 
-facade = DataAnalysisFacade()
-
 if "current_page" not in st.session_state:
     st.session_state.current_page = "preprocessing"
 if "data_file" not in st.session_state:
@@ -31,7 +27,10 @@ if "preprocessing_done" not in st.session_state:
     st.session_state.preprocessing_done = False
 if "preprocessed_data" not in st.session_state:
     st.session_state.preprocessed_data = None
+if "facade" not in st.session_state:
+    st.session_state.facade = DataAnalysisFacade()  # Initialize the facade once
 
+facade = st.session_state.facade  # Access the single instance
 
 # Sidebar - Step 1: Upload Dataset
 if st.session_state.current_page == "preprocessing":
@@ -41,14 +40,17 @@ if st.session_state.current_page == "preprocessing":
     )
     use_example = st.sidebar.button("Use an example dataset")
     if use_example:
-        st.session_state.data_file = "samples/iris.json"
+        st.session_state.data_file = "samples/diamonds.csv"
     if data_file:
         st.session_state.data_file = data_file
 
 # Load data if available
 if st.session_state.data_file:
+    # Initialize DataPreprocessor and PlotContext only once
     if "preprocessor" not in st.session_state:
         data = facade.load_data(st.session_state.data_file)
+        st.session_state.preprocessor = facade.preprocessor  # Store the preprocessor
+        st.session_state.plot_context = facade.plot_context  # Store the plot context
     else:
         data = (
             st.session_state.preprocessor.get_data()
@@ -143,14 +145,14 @@ if st.session_state.data_file:
             if plot_type != "heatmap" and plot_type != "dimensionality_reduction":
                 x_column = st.sidebar.selectbox(
                     "Select X-axis column",
-                    facade.preprocessor.get_data().columns,
+                    st.session_state.preprocessor.get_data().columns,
                     key="x_column",
                 )
                 additional_params["x_column"] = x_column
                 if plot_type in ["line", "scatter"]:
                     y_column = st.sidebar.selectbox(
                         "Select Y-axis column",
-                        facade.preprocessor.get_data().columns,
+                        st.session_state.preprocessor.get_data().columns,
                         key="y_column",
                     )
                     additional_params["y_column"] = y_column
@@ -169,7 +171,7 @@ if st.session_state.data_file:
                             "Select Categorical Column for Coloring",
                             [None]
                             + list(
-                                facade.preprocessor.get_data()
+                                st.session_state.preprocessor.get_data()
                                 .select_dtypes(include=["object"])
                                 .columns
                             ),
@@ -188,7 +190,7 @@ if st.session_state.data_file:
                 elif plot_type == "boxplot":
                     y_column = st.sidebar.selectbox(
                         "Select Y-axis column",
-                        facade.preprocessor.get_data().columns,
+                        st.session_state.preprocessor.get_data().columns,
                         key="y_column",
                     )
                     additional_params["box_color"] = st.sidebar.color_picker(
@@ -197,15 +199,14 @@ if st.session_state.data_file:
             elif plot_type == "heatmap":
                 x_column = st.sidebar.selectbox(
                     "Select X-axis column",
-                    facade.preprocessor.get_data()
+                    st.session_state.preprocessor.get_data()
                     .select_dtypes(include=["object"])
                     .columns,
                     key="x_column",
                 )
-                additional_params["x_column"] = x_column
                 y_column = st.sidebar.selectbox(
                     "Select Y-axis column",
-                    facade.preprocessor.get_data()
+                    st.session_state.preprocessor.get_data()
                     .select_dtypes(include=["object"])
                     .columns,
                     key="y_column",
@@ -213,7 +214,7 @@ if st.session_state.data_file:
                 additional_params["y_column"] = y_column
                 z_column = st.sidebar.selectbox(
                     "Select Z-axis column",
-                    facade.preprocessor.get_data().columns,
+                    st.session_state.preprocessor.get_data().columns,
                     key="z_column",
                 )
                 additional_params["z_column"] = z_column
@@ -222,7 +223,7 @@ if st.session_state.data_file:
                 )
 
             elif plot_type == "dimensionality_reduction":
-                additional_params["data"] = facade.preprocessor.get_data()
+                additional_params["data"] = st.session_state.preprocessor.get_data()
                 reduction_method = st.sidebar.selectbox(
                     "Select Dimensionality Reduction Method", ["PCA", "UMAP"]
                 )
@@ -231,7 +232,7 @@ if st.session_state.data_file:
                     "Select Categorical Column for Coloring",
                     [None]
                     + list(
-                        facade.preprocessor.get_data()
+                        st.session_state.preprocessor.get_data()
                         .select_dtypes(include=["object"])
                         .columns
                     ),
@@ -243,6 +244,7 @@ if st.session_state.data_file:
                     n_neighbors = st.sidebar.slider("Select n_neighbors", 5, 50, 5)
                     min_dist = st.sidebar.slider("Select min_dist", 0.0, 1.0, 0.1)
 
+                    # Default title and custom title input
             default_title = f"{plot_type.capitalize()} Plot"
             if plot_type in ["line", "scatter", "heatmap"]:
                 default_title += f" X {x_column}, Y {y_column}"
@@ -261,7 +263,7 @@ if st.session_state.data_file:
             additional_params["title"] = custom_title
 
             try:
-                fig = facade.create_plot(
+                fig = st.session_state.facade.create_plot(
                     plot_type=plot_type, plot_subtype=plot_subtype, **additional_params
                 )
                 st.plotly_chart(fig)

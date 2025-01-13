@@ -3,9 +3,12 @@ import logging
 from core.singleton import SingletonMeta
 
 # Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
-class DataPreprocessor(metaclass=SingletonMeta):
+
+class DataPreprocessor:
     """
     Class to handle various preprocessing operations on a Pandas DataFrame.
     """
@@ -45,10 +48,14 @@ class DataPreprocessor(metaclass=SingletonMeta):
                 self.data = self.data.dropna()
             elif method == "fill":
                 if fill_value is None:
-                    raise ValueError("fill_value must be provided when method is 'fill'.")
+                    raise ValueError(
+                        "fill_value must be provided when method is 'fill'."
+                    )
                 self.data = self.data.fillna(fill_value)
             else:
-                raise ValueError("Invalid method for handling nulls. Choose from 'mean', 'drop', or 'fill'.")
+                raise ValueError(
+                    "Invalid method for handling nulls. Choose from 'mean', 'drop', or 'fill'."
+                )
         except Exception as e:
             raise
         return self.data
