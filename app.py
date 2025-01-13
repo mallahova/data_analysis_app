@@ -40,7 +40,7 @@ if st.session_state.current_page == "preprocessing":
     )
     use_example = st.sidebar.button("Use an example dataset")
     if use_example:
-        st.session_state.data_file = "samples/iris.json"
+        st.session_state.data_file = "samples/diamonds.csv"
     if data_file:
         st.session_state.data_file = data_file
 

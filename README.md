@@ -7,7 +7,7 @@ Check out the live deployed version [here](https://visualizevisualize.streamlit.
 
 ## Demo Video
 Watch the app in action:  
-![Demo Video](assets/demo.mp4)
+[Demo Video](assets/demo.mp4)
 
 ## Quickstart
 Install dependencies:

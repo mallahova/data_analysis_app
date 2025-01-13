@@ -75,3 +75,40 @@ class DataAnalysisFacade(metaclass=SingletonMeta):
             self.plot_context.set_plot(fig)
         return self.plot_context.fig
     
+# example usage
+# if __name__=='__main__':
+#     facade = DataAnalysisFacade()
+
+#     # Load Data
+#     data = facade.load_data("samples/diamonds.csv")
+#     print("Loaded Data:")
+#     print(data.head())
+
+#     # Preprocess Data
+#     preprocessed_data = facade.preprocess_data(
+#         handle_nulls={"method": "mean"},
+#         rename_map={"cut": "cut_quality"},
+#         drop_cols=["table"],
+#     )
+#     print("Preprocessed Data:")
+#     print(preprocessed_data.head())
+
+#     # Create Scatter Plot
+#     fig = facade.create_plot(
+#         plot_type="scatter",
+#         title="Sample Scatter Plot",
+#         x_column="carat",
+#         y_column="price",
+#         plot_subtype=None,
+#     )
+#     fig.show()
+
+#     # Create PCA Plot
+#     fig = facade.create_plot(
+#         plot_type="dimensionality_reduction",
+#         plot_subtype="PCA",
+#         n_components=2,
+#         categorical_column="cut_quality",
+#         data=facade.preprocessor.get_data(),
+#     )
+#     fig.show()
