@@ -204,6 +204,7 @@ if st.session_state.data_file:
                     .columns,
                     key="x_column",
                 )
+                additional_params["x_column"] = x_column
                 y_column = st.sidebar.selectbox(
                     "Select Y-axis column",
                     st.session_state.preprocessor.get_data()
